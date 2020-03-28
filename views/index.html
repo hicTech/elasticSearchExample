@@ -1,0 +1,225 @@
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+
+<head>
+    <title>ElasticSearch tool</title>
+</head>
+
+<body>
+
+    <nav >
+        
+    </nav>
+
+    <div id="action-container">
+        <div class="pane" id="pane-module">
+            <h2>Ricerca</h2>
+
+                Registro particolare <input type="text" id= "reg_par" >
+                Registro generale <input type="text" id= "reg_gen" >
+                Anno <input type="text" id= "anno" >
+                Notaio <input type="text" id= "notaio" >
+                Repertorio <input type="text" id= "repertorio" >
+                Tipo formalità <input type="text" id= "tipo_formalita" >
+                <p></p>
+                <button type="button" id="searchbtt" class="btn btn-light" >Cerca</button>
+                <p></p>
+                Ricerca multipla <input type="file"  id="multi_search"></button>
+                Carica <input type="file"  id="file_load"></button>
+    </div>
+</div>
+
+    <div id="result-container">
+
+  </div>
+
+
+</body>
+
+
+
+<style>
+
+#pane-module{
+    position: fixed;
+    width: 200px;
+    left: 20px;
+    color: white;
+}
+#pane-module input {
+    color: black;
+}
+#pane-module button {
+    color: black;
+}
+
+
+#action-container {
+    position: fixed;
+    top: 80;
+    bottom: 0;
+    width: 240px;
+    background-color: #4CAF50;
+  }
+
+#result-container {
+  position: fixed;
+  top: 80;
+  left: 240px;
+  bottom: 0;
+  right: 0;
+  overflow: auto;
+  border: 5px solid #4CAF50;
+}
+
+#customers {
+  font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+  border-collapse: collapse;
+  width: 100%;
+}
+
+#customers td, #customers th {
+  border: 1px solid #ddd;
+  padding: 8px;
+}
+
+#customers tr:nth-child(even){background-color: #f2f2f2;}
+
+#customers tr:hover {background-color: #ddd;}
+
+#customers th {
+  padding-top: 12px;
+  padding-bottom: 12px;
+  text-align: left;
+  background-color: #4CAF50;
+  color: white;
+}
+
+
+
+</style>
+
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+
+
+<script>
+        $(document).ready(function(){
+            $("#searchbtt").click(function(){
+                arrObj =[]
+                obj = {}
+        if($("#reg_par").value != '' )obj.reg_par = document.getElementById("reg_par").value;
+        if($("#reg_gen").value != '' )obj.reg_gen = document.getElementById("reg_gen").value;
+        if($("#anno").value != '') obj.anno = document.getElementById("anno").value;
+        if($("#notaio").value != '') obj.notaio = document.getElementById("notaio").value;
+        if ($("#repertorio").value != '' ) obj.repertorio = document.getElementById("repertorio").value;
+        if ($("#tipo_formalita").value != '' ) obj.tipo_formalita = document.getElementById("tipo_formalita").value;
+        arrObj.push(obj)
+        axios({
+            method: "post",
+            url: "/search",
+            data:  arrObj
+        }).then(function(resp){
+            console.log(resp.data)
+            var rows= resp.data
+            var size = rows.length
+            var html = "<table id='customers'>";
+                html+="<tr>"; 
+                html+="<th>"+"Risultati della Ricerca"+"</th>";   
+                html+="</tr>"; 
+            for (var i = 0; i < size ; i++) {
+                if ( rows[i]!= null){
+                html+="<tr>";
+                html+="<td>"+rows[i]._source.url+"</td>";       
+                html+="</tr>";
+                }
+                else {
+                    html+="<tr>";
+                    html+="<td>"+" Nessun risultato "+"</td>";       
+                    html+="</tr>";
+                }
+            
+            }
+            html+="</table>";
+            $("#result-container").html(html);
+           
+        })
+            })
+        })
+        
+</script>
+
+<script>
+    var input = document.getElementById("multi_search");
+    var output = document.getElementById("result-container");
+    
+    input.onchange = function(event) {
+        var reader = new FileReader();
+        reader.onload = onReaderLoad;
+        reader.readAsText(event.target.files[0]);
+    }
+    function onReaderLoad(event){
+        var data = JSON.parse(event.target.result);        
+        console.log(data)
+        axios({
+            method: "post",
+            url: "/search",
+            data:  data
+        }).then(function(resp){
+            console.log(resp.data)
+            var rows= resp.data
+            var size = rows.length
+            var html = "<table id='customers'>";
+                html+="<tr>"; 
+                html+="<th>"+"Risultati della Ricerca"+"</th>";   
+                html+="</tr>"; 
+            for (var i = 0; i < size ; i++) {
+                if ( rows[i]!= null){
+                html+="<tr>";
+                html+="<td>"+rows[i]._source.url+"</td>";       
+                html+="</tr>";
+                }
+                else {
+                    html+="<tr>";
+                    html+="<td>"+" Ricerca non valida "+"</td>";       
+                    html+="</tr>";
+                }
+            
+            }
+            html+="</table>";
+            $("#result-container").html(html);
+           
+        })
+    }
+    
+</script>
+
+<script>
+    var input = document.getElementById("file_load");
+    var output = document.getElementById("result-container");
+
+    input.onchange = function(event) {
+        var reader2 = new FileReader();
+        reader2.onload = onReader2Load;
+        reader2.readAsText(event.target.files[0]);
+    }
+    function onReader2Load(event){
+        var data = JSON.parse(event.target.result);        
+        console.log(data)
+        axios({
+            method: "post",
+            url: "/load",
+            data:  data
+        }).then(function(resp){
+            console.log(resp.data)
+            var html = "<table id='customers'>";
+                html+="<tr>"; 
+                html+="<th>"+resp+"</th>";   
+                html+="</tr>"; 
+           
+        })
+    }
+
+</script>
+
+
+
